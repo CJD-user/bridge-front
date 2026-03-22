@@ -18,7 +18,7 @@
     <!-- 顶部头部信息 -->
     <a-layout-header class="layout-header">
       <a-row class="layout-header-title">
-        <img class="logo-img" :src="logoImg" />
+<!--        <img class="logo-img" :src="logoImg" />-->
         <div class="title">{{ websiteName }}</div>
         <div class="title">帮助文档</div>
         <a-col class="avatar">

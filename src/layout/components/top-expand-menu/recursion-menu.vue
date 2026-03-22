@@ -11,11 +11,11 @@
   <div class="recursion-container" v-show="topMenu.children && topMenu.children.length > 0">
     <!-- 顶部logo区域 -->
     <div class="logo" @click="onGoHome" :style="sideMenuWidth" v-if="!collapsed">
-      <img class="logo-img" :src="logoImg" />
+<!--      <img class="logo-img" :src="logoImg" />-->
       <div class="title" >{{ websiteName }}</div>
     </div>
     <div class="min-logo" @click="onGoHome" v-if="collapsed">
-      <img class="logo-img" :src="logoImg" />
+<!--      <img class="logo-img" :src="logoImg" />-->
     </div>
     <!-- 次级菜单展示 -->
     <a-menu :selectedKeys="selectedKeys" theme="light" :openKeys="openKeys" mode="inline">

@@ -12,12 +12,12 @@
 
   <!-- 1、顶部logo区域 -->
   <div class="logo" @click="onGoHome" :style="sideMenuWidth" v-if="!collapsed">
-    <img class="logo-img" :src="logoImg" />
+<!--    <img class="logo-img" :src="logoImg" />-->
     <div class="title smart-logo title-light" v-if="sideMenuTheme === 'light'">{{ websiteName }}</div>
     <div class="title smart-logo title-dark" v-if="sideMenuTheme === 'dark'">{{ websiteName }}</div>
   </div>
   <div class="min-logo" @click="onGoHome" v-if="collapsed">
-    <img class="logo-img" :src="logoImg" />
+<!--    <img class="logo-img" :src="logoImg" />-->
   </div>
 
   <!-- 2、下方菜单区域： 这里使用一个递归菜单解决 -->

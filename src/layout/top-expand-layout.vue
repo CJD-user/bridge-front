@@ -82,9 +82,9 @@
       <a-back-top :target="backTopTarget" :visibilityHeight="80" />
     </a-layout>
     <!-- 右侧帮助文档 help-doc -->
-    <a-layout-sider v-show="helpDocFlag" theme="light" :width="180" class="help-doc-sider" :trigger="null" style="min-height: 100%">
-      <SideHelpDoc />
-    </a-layout-sider>
+<!--    <a-layout-sider v-show="helpDocFlag" theme="light" :width="180" class="help-doc-sider" :trigger="null" style="min-height: 100%">-->
+<!--      <SideHelpDoc />-->
+<!--    </a-layout-sider>-->
   </a-layout>
 </template>
 <script setup>

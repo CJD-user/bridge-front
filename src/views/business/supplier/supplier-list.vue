@@ -1,5 +1,5 @@
 <!--
-  * 材料列表
+  * 供应商列表
   *
   * @Author:    1024创新实验室
   * @Date:      2024-01-01
@@ -7,21 +7,17 @@
 -->
 <template>
   <a-form class="smart-query-form">
-    <a-row class="smart-query-form-row" v-privilege="'material:query'">
-      <a-form-item label="材料编码" class="smart-query-form-item">
-        <a-input style="width: 150px" v-model:value="queryForm.materialCode" placeholder="材料编码" />
+    <a-row class="smart-query-form-row" v-privilege="'supplier:query'">
+      <a-form-item label="供应商编码" class="smart-query-form-item">
+        <a-input style="width: 150px" v-model:value="queryForm.supplierCode" placeholder="供应商编码" />
       </a-form-item>
 
-      <a-form-item label="材料名称" class="smart-query-form-item">
-        <a-input style="width: 200px" v-model:value="queryForm.materialName" placeholder="材料名称" />
+      <a-form-item label="供应商名称" class="smart-query-form-item">
+        <a-input style="width: 200px" v-model:value="queryForm.supplierName" placeholder="供应商名称" />
       </a-form-item>
 
-      <a-form-item label="材料分类" class="smart-query-form-item">
-        <MaterialCategoryTreeSelect
-          width="150px"
-          v-model:value="queryForm.materialCategoryId"
-          placeholder="请选择材料分类"
-        />
+      <a-form-item label="联系人" class="smart-query-form-item">
+        <a-input style="width: 120px" v-model:value="queryForm.contactPerson" placeholder="联系人" />
       </a-form-item>
 
       <a-form-item label="禁用状态" class="smart-query-form-item">
@@ -34,13 +30,13 @@
 
       <a-form-item class="smart-query-form-item">
         <a-button-group>
-          <a-button type="primary" @click="onSearch" v-privilege="'material:query'">
+          <a-button type="primary" @click="onSearch" v-privilege="'supplier:query'">
             <template #icon>
               <SearchOutlined />
             </template>
             查询
           </a-button>
-          <a-button @click="resetQuery" v-privilege="'material:query'">
+          <a-button @click="resetQuery" v-privilege="'supplier:query'">
             <template #icon>
               <ReloadOutlined />
             </template>
@@ -54,36 +50,22 @@
   <a-card size="small" :bordered="false" :hoverable="true">
     <a-row class="smart-table-btn-block">
       <div class="smart-table-operate-block">
-        <a-button @click="addMaterial" type="primary" v-privilege="'material:add'">
+        <a-button @click="addSupplier" type="primary" v-privilege="'supplier:add'">
           <template #icon>
             <PlusOutlined />
           </template>
           新建
         </a-button>
 
-        <a-button @click="confirmBatchDelete" danger :disabled="selectedRowKeyList.length === 0" v-privilege="'material:batchDelete'">
+        <a-button @click="confirmBatchDelete" danger :disabled="selectedRowKeyList.length === 0" v-privilege="'supplier:batchDelete'">
           <template #icon>
             <DeleteOutlined />
           </template>
           批量删除
         </a-button>
-
-        <a-button @click="showImportModal" type="primary" v-privilege="'material:import'">
-          <template #icon>
-            <ImportOutlined />
-          </template>
-          导入
-        </a-button>
-
-        <a-button @click="onExportMaterial" type="primary" v-privilege="'material:export'">
-          <template #icon>
-            <ExportOutlined />
-          </template>
-          导出
-        </a-button>
       </div>
       <div class="smart-table-setting-block">
-        <TableOperator v-model="columns" :tableId="TABLE_ID_CONST.BUSINESS.ERP.MATERIAL" :refresh="queryData" />
+        <TableOperator v-model="columns" :tableId="TABLE_ID_CONST.BUSINESS.ERP.SUPPLIER" :refresh="queryData" />
       </div>
     </a-row>
 
@@ -91,8 +73,8 @@
       size="small"
       :dataSource="tableData"
       :columns="columns"
-      rowKey="materialId"
-      :scroll="{ x: 1500, y: yHeight }"
+      rowKey="supplierId"
+      :scroll="{ x: 1800, y: yHeight }"
       bordered
       :pagination="false"
       :showSorterTooltip="false"
@@ -104,7 +86,7 @@
         <SmartHeaderCell v-model:value="queryForm[column.filterOptions?.key || column.dataIndex]" :column="column" @change="queryData" />
       </template>
       <template #bodyCell="{ text, record, column }">
-        <template v-if="column.dataIndex === 'materialName'">
+        <template v-if="column.dataIndex === 'supplierName'">
           <a @click="showDetail(record)">{{ text }}</a>
         </template>
         <template v-if="column.dataIndex === 'disabledFlag'">
@@ -112,24 +94,27 @@
             v-model:checked="record.disabledFlag"
             :checkedValue="true"
             :unCheckedValue="false"
-            @change="(checked) => onUpdateDisabled(record.materialId, checked)"
-            v-privilege="'material:update'"
+            @change="(checked) => onUpdateDisabled(record.supplierId, checked)"
+            v-privilege="'supplier:update'"
           />
         </template>
-        <template v-if="column.dataIndex === 'unitPrice'">
-          <span>{{ text ? '¥' + text : '' }}</span>
+        <template v-if="column.dataIndex === 'rating'">
+          <a-rate v-model:value="record.rating" disabled :count="5" style="font-size: 12px" />
         </template>
-        <template v-if="column.dataIndex === 'materialImage'">
-          <a-image v-if="text" :width="40" :height="40" :src="text" style="object-fit: cover" />
-          <span v-else>-</span>
+        <template v-if="column.dataIndex === 'totalSupplyAmount'">
+          <span>{{ text ? '¥' + Number(text).toLocaleString() : '¥0' }}</span>
+        </template>
+        <template v-if="column.dataIndex === 'address'">
+          <span>{{ (record.provinceName || '') + (record.cityName || '') + (text || '') }}</span>
         </template>
         <template v-if="column.dataIndex === 'remark'">
           <span>{{ text || '-' }}</span>
         </template>
         <template v-if="column.dataIndex === 'action'">
           <div class="smart-table-operate">
-            <a-button @click="addMaterial(record)" type="link" v-privilege="'material:update'">编辑</a-button>
-            <a-button @click="deleteMaterial(record)" danger type="link" v-privilege="'material:delete'">删除</a-button>
+            <a-button @click="showEvaluate(record)" type="link" v-privilege="'supplierEvaluate:query'">评价</a-button>
+            <a-button @click="addSupplier(record)" type="link" v-privilege="'supplier:update'">编辑</a-button>
+            <a-button @click="deleteSupplier(record)" danger type="link" v-privilege="'supplier:delete'">删除</a-button>
           </div>
         </template>
       </template>
@@ -150,44 +135,18 @@
       />
     </div>
 
-    <MaterialFormModal ref="formModal" @reloadList="queryData" />
-
-    <a-modal v-model:open="importModalShowFlag" title="导入材料" @onCancel="hideImportModal" @ok="hideImportModal">
-      <div style="text-align: center; width: 400px; margin: 0 auto">
-        <a-button @click="onDownloadTemplate"> <download-outlined />第一步：下载模板</a-button>
-        <br />
-        <br />
-        <a-upload
-          v-model:fileList="fileList"
-          name="file"
-          :multiple="false"
-          accept=".xls,.xlsx"
-          :before-upload="beforeUpload"
-          @remove="handleRemove"
-        >
-          <a-button>
-            <upload-outlined />
-            第二步：选择文件
-          </a-button>
-        </a-upload>
-
-        <br />
-        <a-button @click="onImportMaterial">
-          <ImportOutlined />
-          第三步：开始导入
-        </a-button>
-      </div>
-    </a-modal>
+    <SupplierFormModal ref="formModal" @reloadList="queryData" />
+    <SupplierEvaluateListModal ref="evaluateModal" />
   </a-card>
 </template>
 <script setup>
-  import MaterialFormModal from './components/material-form-modal.vue';
+  import SupplierFormModal from './components/supplier-form-modal.vue';
+  import SupplierEvaluateListModal from './components/supplier-evaluate-list-modal.vue';
   import { onMounted, reactive, ref } from 'vue';
   import { message, Modal } from 'ant-design-vue';
   import { SmartLoading } from '/@/components/framework/smart-loading';
-  import { materialApi } from '/@/api/business/material/material-api';
+  import { supplierApi } from '/@/api/business/supplier/supplier-api';
   import { PAGE_SIZE_OPTIONS } from '/@/constants/common-const';
-  import MaterialCategoryTreeSelect from '/@/components/business/material-category-tree-select/index.vue';
   import { smartSentry } from '/@/lib/smart-sentry';
   import TableOperator from '/@/components/support/table-operator/index.vue';
   import { TABLE_ID_CONST } from '/@/constants/support/table-id-const';
@@ -196,73 +155,66 @@
 
   const columns = ref([
     {
-      title: '材料编码',
-      dataIndex: 'materialCode',
+      title: '供应商编码',
+      dataIndex: 'supplierCode',
       resizable: true,
       filterOptions: {
         type: 'input',
-        key: 'materialCode',
+        key: 'supplierCode',
       },
       width: 120,
     },
     {
-      title: '材料名称',
-      dataIndex: 'materialName',
+      title: '供应商名称',
+      dataIndex: 'supplierName',
       resizable: true,
       filterOptions: {
         type: 'input',
-        key: 'materialName',
+        key: 'supplierName',
       },
-      width: 150,
+      width: 180,
     },
     {
-      title: '材料分类',
-      dataIndex: 'materialCategoryName',
-      resizable: true,
-      width: 120,
-    },
-    {
-      title: '规格型号',
-      dataIndex: 'specificationModel',
-      resizable: true,
-      width: 120,
-    },
-    {
-      title: '计量单位',
-      dataIndex: 'unit',
-      resizable: true,
-      width: 80,
-    },
-    {
-      title: '参考单价',
-      dataIndex: 'unitPrice',
-      resizable: true,
-      sorter: true,
-      width: 100,
-    },
-    {
-      title: '安全库存阈值',
-      dataIndex: 'safetyStockThreshold',
-      resizable: true,
-      width: 120,
-    },
-    {
-      title: '品牌',
-      dataIndex: 'brand',
+      title: '简称',
+      dataIndex: 'shortName',
       resizable: true,
       width: 100,
     },
     {
-      title: '生产厂家',
-      dataIndex: 'manufacturer',
-      resizable: true,
-      width: 150,
-    },
-    {
-      title: '材料图片',
-      dataIndex: 'materialImage',
+      title: '联系人',
+      dataIndex: 'contactPerson',
       resizable: true,
       width: 80,
+    },
+    {
+      title: '联系电话',
+      dataIndex: 'contactPhone',
+      resizable: true,
+      width: 120,
+    },
+    {
+      title: '地址',
+      dataIndex: 'address',
+      resizable: true,
+      width: 200,
+    },
+    {
+      title: '评级',
+      dataIndex: 'rating',
+      resizable: true,
+      width: 120,
+    },
+    {
+      title: '累计供货次数',
+      dataIndex: 'totalSupplyCount',
+      resizable: true,
+      width: 120,
+    },
+    {
+      title: '累计供货金额',
+      dataIndex: 'totalSupplyAmount',
+      resizable: true,
+      width: 120,
     },
     {
       title: '禁用状态',
@@ -281,14 +233,14 @@
       dataIndex: 'action',
       resizable: true,
       fixed: 'right',
-      width: 100,
+      width: 150,
     },
   ]);
 
   const queryFormState = {
-    materialCode: undefined,
-    materialName: undefined,
-    materialCategoryId: undefined,
+    supplierCode: undefined,
+    supplierName: undefined,
+    contactPerson: undefined,
     disabledFlag: undefined,
     pageNum: 1,
     pageSize: 10,
@@ -323,7 +275,7 @@
   async function queryData() {
     tableLoading.value = true;
     try {
-      let queryResult = await materialApi.query(queryForm);
+      let queryResult = await supplierApi.query(queryForm);
       tableData.value = queryResult.data.list;
       total.value = queryResult.data.total;
     } catch (e) {
@@ -336,33 +288,38 @@
   onMounted(queryData);
 
   const formModal = ref();
+  const evaluateModal = ref();
 
-  function addMaterial(materialData) {
-    formModal.value.showDrawer(materialData);
+  function addSupplier(supplierData) {
+    formModal.value.showDrawer(supplierData);
   }
 
   function showDetail(record) {
     formModal.value.showDrawer(record);
   }
 
-  function deleteMaterial(materialData) {
+  function showEvaluate(record) {
+    evaluateModal.value.show(record.supplierId);
+  }
+
+  function deleteSupplier(supplierData) {
     Modal.confirm({
       title: '提示',
-      content: '确定要删除【' + materialData.materialName + '】吗?',
+      content: '确定要删除【' + supplierData.supplierName + '】吗?',
       okText: '删除',
       okType: 'danger',
       onOk() {
-        singleDelete(materialData);
+        singleDelete(supplierData);
       },
       cancelText: '取消',
       onCancel() {},
     });
   }
 
-  async function singleDelete(materialData) {
+  async function singleDelete(supplierData) {
     try {
       SmartLoading.show();
-      await materialApi.delete(materialData.materialId);
+      await supplierApi.delete(supplierData.supplierId);
       message.success('删除成功');
       queryData();
     } catch (e) {
@@ -381,7 +338,7 @@
   function confirmBatchDelete() {
     Modal.confirm({
       title: '提示',
-      content: '确定要删除选中材料吗?',
+      content: '确定要删除选中供应商吗?',
       okText: '删除',
       okType: 'danger',
       onOk() {
@@ -395,7 +352,7 @@
   async function batchDelete() {
     try {
       SmartLoading.show();
-      await materialApi.batchDelete(selectedRowKeyList.value);
+      await supplierApi.batchDelete(selectedRowKeyList.value);
       message.success('删除成功');
       queryData();
     } catch (e) {
@@ -405,10 +362,10 @@
     }
   }
 
-  async function onUpdateDisabled(materialId, disabledFlag) {
+  async function onUpdateDisabled(supplierId, disabledFlag) {
     try {
       SmartLoading.show();
-      await materialApi.updateDisabled(materialId, disabledFlag);
+      await supplierApi.updateDisabled(supplierId, disabledFlag);
       message.success('更新成功');
       queryData();
     } catch (e) {
@@ -416,57 +373,6 @@
     } finally {
       SmartLoading.hide();
     }
-  }
-
-  const importModalShowFlag = ref(false);
-  const fileList = ref([]);
-
-  function showImportModal() {
-    fileList.value = [];
-    importModalShowFlag.value = true;
-  }
-
-  function hideImportModal() {
-    importModalShowFlag.value = false;
-  }
-
-  function handleRemove(file) {
-    const index = fileList.value.indexOf(file);
-    const newFileList = fileList.value.slice();
-    newFileList.splice(index, 1);
-    fileList.value = newFileList;
-  }
-
-  function beforeUpload(file) {
-    fileList.value = [...(fileList.value || []), file];
-    return false;
-  }
-
-  async function onDownloadTemplate() {
-    await materialApi.downloadTemplate();
-  }
-
-  async function onImportMaterial() {
-    const formData = new FormData();
-    fileList.value.forEach((file) => {
-      formData.append('file', file.originFileObj || file);
-    });
-
-    SmartLoading.show();
-    try {
-      let res = await materialApi.importMaterial(formData);
-      message.success(res.msg);
-      hideImportModal();
-      queryData();
-    } catch (e) {
-      smartSentry.captureError(e);
-    } finally {
-      SmartLoading.hide();
-    }
-  }
-
-  async function onExportMaterial() {
-    await materialApi.exportMaterial();
   }
 
   function onChange(pagination, filters, sorter, { action }) {

@@ -35,15 +35,15 @@ export const appDefaultConfig = {
   // 面包屑
   breadCrumbFlag: true,
   // 页脚
-  footerFlag: true,
+  footerFlag: false,
   // 帮助文档
-  helpDocFlag: true,
+  helpDocFlag: false,
   // 帮助文档默认展开
   helpDocExpandFlag: false,
   // 水印
-  watermarkFlag: true,
+  watermarkFlag: false,
   // 网站名称
-  websiteName: 'SmartAdmin 3.X',
+  websiteName: '桥梁器械建材管理系统',
   // 主题颜色
   primaryColor: '#1677ff',
   // 紧凑

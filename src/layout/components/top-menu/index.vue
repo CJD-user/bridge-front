@@ -12,7 +12,7 @@
   <div class="header-main">
     <!-- 1、logo区域 -->
     <div class="logo" @click="onGoHome">
-      <img class="logo-img" :src="logoImg" />
+<!--      <img class="logo-img" :src="logoImg" />-->
       <div class="title smart-logo title-light" v-if="sideMenuTheme === 'light'">{{ websiteName }}</div>
       <div class="title smart-logo title-dark" v-if="sideMenuTheme === 'dark'">{{ websiteName }}</div>
     </div>
