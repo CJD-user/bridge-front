@@ -16,6 +16,10 @@ export const CATEGORY_TYPE_ENUM = {
     value: 2,
     desc: '演示分类',
   },
+  MATERIAL: {
+    value: 3,
+    desc: '材料',
+  },
 };
 
 export default {

@@ -31,6 +31,7 @@ export const TABLE_ID_CONST = {
     },
     ERP: {
       GOODS: businessERPInitTableId + 1, //商品管理
+      MATERIAL: businessERPInitTableId + 2, //材料管理
     },
   },
 
