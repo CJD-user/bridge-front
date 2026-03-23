@@ -1,313 +1,257 @@
 <!--
-  * 审批流程配置表
+  * 审批流程列表
   *
-  * @Author:    hyc
-  * @Date:      2026-03-22 15:50:20
-  * @Copyright  /
+  * @Author:    1024创新实验室
+  * @Date:      2024-01-01
+  * @Copyright  1024创新实验室
 -->
 <template>
-  <!---------- 查询表单form begin ----------->
   <a-form class="smart-query-form">
-    <a-row class="smart-query-form-row">
-      <a-form-item label="业务类型" class="smart-query-form-item">
-        <SmartEnumSelect width="200px" v-model:value="queryForm.businessType" enum-name="" placeholder="业务类型"/>
-      </a-form-item>
-      <a-form-item label="启用状态" class="smart-query-form-item">
-        <SmartEnumSelect width="200px" v-model:value="queryForm.status" enum-name="" placeholder="启用状态"/>
-      </a-form-item>
-      <a-form-item label="删除状态" class="smart-query-form-item">
-        <SmartEnumSelect width="200px" v-model:value="queryForm.deletedFlag" enum-name="" placeholder="删除状态"/>
-      </a-form-item>
+    <a-row class="smart-query-form-row" v-privilege="'approvalFlow:query'">
       <a-form-item label="流程名称" class="smart-query-form-item">
-        <a-input style="width: 200px" v-model:value="queryForm.flowName" placeholder="流程名称" />
+        <a-input style="width: 150px" v-model:value="queryForm.flowName" placeholder="流程名称" />
       </a-form-item>
+
+      <a-form-item label="流程编码" class="smart-query-form-item">
+        <a-input style="width: 150px" v-model:value="queryForm.flowCode" placeholder="流程编码" />
+      </a-form-item>
+
+      <a-form-item label="业务类型" class="smart-query-form-item">
+        <a-select style="width: 120px" v-model:value="queryForm.businessType" placeholder="业务类型" allowClear>
+          <a-select-option v-for="item in BUSINESS_TYPE_ENUM" :key="item.value" :value="item.value">
+            {{ item.desc }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
+
+      <a-form-item label="状态" class="smart-query-form-item">
+        <a-select style="width: 100px" v-model:value="queryForm.status" placeholder="状态" allowClear>
+          <a-select-option v-for="item in FLOW_STATUS_ENUM" :key="item.value" :value="item.value">
+            {{ item.desc }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
+
       <a-form-item class="smart-query-form-item">
-        <a-button type="primary" @click="onSearch">
-          <template #icon>
-            <SearchOutlined />
-          </template>
-          查询
-        </a-button>
-        <a-button @click="resetQuery" class="smart-margin-left10">
-          <template #icon>
-            <ReloadOutlined />
-          </template>
-          重置
-        </a-button>
+        <a-button-group>
+          <a-button type="primary" @click="onSearch" v-privilege="'approvalFlow:query'">
+            <template #icon>
+              <SearchOutlined />
+            </template>
+            查询
+          </a-button>
+          <a-button @click="resetQuery" v-privilege="'approvalFlow:query'">
+            <template #icon>
+              <ReloadOutlined />
+            </template>
+            重置
+          </a-button>
+        </a-button-group>
       </a-form-item>
     </a-row>
   </a-form>
-  <!---------- 查询表单form end ----------->
 
   <a-card size="small" :bordered="false" :hoverable="true">
-    <!---------- 表格操作行 begin ----------->
     <a-row class="smart-table-btn-block">
       <div class="smart-table-operate-block">
-        <a-button @click="showForm" type="primary" size="small">
+        <a-button @click="addFlow" type="primary" v-privilege="'approvalFlow:add'">
           <template #icon>
             <PlusOutlined />
           </template>
           新建
         </a-button>
-        <a-button @click="confirmBatchDelete" type="primary" danger size="small" :disabled="selectedRowKeyList.length == 0">
-          <template #icon>
-            <DeleteOutlined />
-          </template>
-          批量删除
-        </a-button>
       </div>
       <div class="smart-table-setting-block">
-        <TableOperator v-model="columns" :tableId="null" :refresh="queryData" />
+        <TableOperator v-model="columns" :tableId="TABLE_ID_CONST.BUSINESS.ERP.APPROVAL_FLOW" :refresh="queryData" />
       </div>
     </a-row>
-    <!---------- 表格操作行 end ----------->
 
-    <!---------- 表格 begin ----------->
     <a-table
-        size="small"
-        :scroll="{ y: 800 }"
-        :dataSource="tableData"
-        :columns="columns"
-        rowKey="approvalFlowId"
-        bordered
-        :loading="tableLoading"
-        :pagination="false"
-        :row-selection="{ selectedRowKeys: selectedRowKeyList, onChange: onSelectChange }"
+      size="small"
+      :dataSource="tableData"
+      :columns="columns"
+      rowKey="approvalFlowId"
+      :scroll="{ x: 1000 }"
+      bordered
+      :pagination="false"
     >
       <template #bodyCell="{ text, record, column }">
-
-
+        <template v-if="column.dataIndex === 'flowName'">
+          <a @click="showDetail(record)">{{ text }}</a>
+        </template>
+        <template v-if="column.dataIndex === 'businessType'">
+          <span>{{ getBusinessTypeDesc(text) }}</span>
+        </template>
+        <template v-if="column.dataIndex === 'status'">
+          <a-tag :color="text === 1 ? 'green' : 'red'">{{ text === 1 ? '启用' : '停用' }}</a-tag>
+        </template>
         <template v-if="column.dataIndex === 'action'">
           <div class="smart-table-operate">
-            <a-button @click="showForm(record)" type="link">编辑</a-button>
-            <a-button @click="onDelete(record)" danger type="link">删除</a-button>
+            <a-button @click="addFlow(record)" type="link" v-privilege="'approvalFlow:update'">编辑</a-button>
+            <a-button @click="deleteFlow(record)" danger type="link" v-privilege="'approvalFlow:delete'">删除</a-button>
           </div>
         </template>
       </template>
     </a-table>
-    <!---------- 表格 end ----------->
 
     <div class="smart-query-table-page">
       <a-pagination
-          showSizeChanger
-          showQuickJumper
-          show-less-items
-          :pageSizeOptions="PAGE_SIZE_OPTIONS"
-          :defaultPageSize="queryForm.pageSize"
-          v-model:current="queryForm.pageNum"
-          v-model:pageSize="queryForm.pageSize"
-          :total="total"
-          @change="queryData"
-          @showSizeChange="queryData"
-          :show-total="(total) => `共${total}条`"
+        showSizeChanger
+        showQuickJumper
+        show-less-items
+        :pageSizeOptions="PAGE_SIZE_OPTIONS"
+        :defaultPageSize="queryForm.pageSize"
+        v-model:current="queryForm.pageNum"
+        v-model:pageSize="queryForm.pageSize"
+        :total="total"
+        @change="queryData"
+        :show-total="(total) => `共${total}条`"
       />
     </div>
 
-    <approvalFlowForm  ref="formRef" @reloadList="queryData"/>
-
+    <ApprovalFlowFormModal ref="formModal" @reloadList="queryData" />
   </a-card>
 </template>
-<script setup lang="ts">
-import ApprovalFlowForm from './components/approval-flow-form-modal.vue';
-import { reactive, ref, onMounted } from 'vue';
-import { message, Modal } from 'ant-design-vue';
-import { SmartLoading } from '/@/components/framework/smart-loading';
-import { approvalFlowApi } from '/@/api/business/approval-flow/approval-flow-api';
-import { PAGE_SIZE_OPTIONS } from '/@/constants/common-const';
-import { smartSentry } from '/@/lib/smart-sentry';
-import TableOperator from '/@/components/support/table-operator/index.vue';
+<script setup>
+  import ApprovalFlowFormModal from './components/approval-flow-form-modal.vue';
+  import { onMounted, reactive, ref } from 'vue';
+  import { message, Modal } from 'ant-design-vue';
+  import { SmartLoading } from '/@/components/framework/smart-loading';
+  import { approvalFlowApi } from '/@/api/business/approval-flow/approval-flow-api';
+  import { PAGE_SIZE_OPTIONS } from '/@/constants/common-const';
+  import { smartSentry } from '/@/lib/smart-sentry';
+  import TableOperator from '/@/components/support/table-operator/index.vue';
+  import { TABLE_ID_CONST } from '/@/constants/support/table-id-const';
+  import { BUSINESS_TYPE_ENUM, FLOW_STATUS_ENUM } from '/@/constants/business/approval-flow/approval-flow-const';
+  import _ from 'lodash';
 
-// ---------------------------- 表格列 ----------------------------
-
-const columns = ref([
-  {
-    title: '审批流程ID',
-    dataIndex: 'approvalFlowId',
-    ellipsis: true,
-  },
-  {
-    title: '流程名称',
-    dataIndex: 'flowName',
-    ellipsis: true,
-  },
-  {
-    title: '流程编码',
-    dataIndex: 'flowCode',
-    ellipsis: true,
-  },
-  {
-    title: '业务类型: 1-采购申请 2-出库申请 3-供应商评价',
-    dataIndex: 'businessType',
-    ellipsis: true,
-  },
-  {
-    title: '流程描述',
-    dataIndex: 'description',
-    ellipsis: true,
-  },
-  {
-    title: '状态: 0-停用 1-启用',
-    dataIndex: 'status',
-    ellipsis: true,
-  },
-  {
-    title: '删除状态: 0未删除 1已删除',
-    dataIndex: 'deletedFlag',
-    ellipsis: true,
-  },
-  {
-    title: '创建人ID',
-    dataIndex: 'createUserId',
-    ellipsis: true,
-  },
-  {
-    title: '创建人姓名',
-    dataIndex: 'createUserName',
-    ellipsis: true,
-  },
-  {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    ellipsis: true,
-  },
-  {
-    title: '更新时间',
-    dataIndex: 'updateTime',
-    ellipsis: true,
-  },
-  {
-    title: '操作',
-    dataIndex: 'action',
-    fixed: 'right',
-    width: 90,
-  },
-]);
-
-// ---------------------------- 查询数据表单和方法 ----------------------------
-
-const queryFormState = {
-  businessType: undefined, //业务类型
-  status: undefined, //启用状态
-  deletedFlag: undefined, //删除状态
-  flowName: undefined, //流程名称
-  pageNum: 1,
-  pageSize: 10,
-};
-// 查询表单form
-const queryForm = reactive({ ...queryFormState });
-// 表格加载loading
-const tableLoading = ref(false);
-// 表格数据
-const tableData = ref([]);
-// 总数
-const total = ref(0);
-
-// 重置查询条件
-function resetQuery() {
-  let pageSize = queryForm.pageSize;
-  Object.assign(queryForm, queryFormState);
-  queryForm.pageSize = pageSize;
-  queryData();
-}
-
-// 搜索
-function onSearch(){
-  queryForm.pageNum = 1;
-  queryData();
-}
-
-// 查询数据
-async function queryData() {
-  tableLoading.value = true;
-  try {
-    let queryResult = await approvalFlowApi.queryPage(queryForm);
-    tableData.value = queryResult.data.list;
-    total.value = queryResult.data.total;
-  } catch (e) {
-    smartSentry.captureError(e);
-  } finally {
-    tableLoading.value = false;
-  }
-}
-
-
-onMounted(queryData);
-
-// ---------------------------- 添加/修改 ----------------------------
-const formRef = ref();
-
-function showForm(data) {
-  formRef.value.show(data);
-}
-
-// ---------------------------- 单个删除 ----------------------------
-//确认删除
-function onDelete(data){
-  Modal.confirm({
-    title: '提示',
-    content: '确定要删除选吗?',
-    okText: '删除',
-    okType: 'danger',
-    onOk() {
-      requestDelete(data);
+  const columns = ref([
+    {
+      title: '流程名称',
+      dataIndex: 'flowName',
+      width: 150,
     },
-    cancelText: '取消',
-    onCancel() {},
-  });
-}
-
-//请求删除
-async function requestDelete(data){
-  SmartLoading.show();
-  try {
-    let deleteForm = {
-      goodsIdList: selectedRowKeyList.value,
-    };
-    await approvalFlowApi.delete(data.approvalFlowId);
-    message.success('删除成功');
-    queryData();
-  } catch (e) {
-    smartSentry.captureError(e);
-  } finally {
-    SmartLoading.hide();
-  }
-}
-
-// ---------------------------- 批量删除 ----------------------------
-
-// 选择表格行
-const selectedRowKeyList = ref([]);
-
-function onSelectChange(selectedRowKeys) {
-  selectedRowKeyList.value = selectedRowKeys;
-}
-
-// 批量删除
-function confirmBatchDelete() {
-  Modal.confirm({
-    title: '提示',
-    content: '确定要批量删除这些数据吗?',
-    okText: '删除',
-    okType: 'danger',
-    onOk() {
-      requestBatchDelete();
+    {
+      title: '流程编码',
+      dataIndex: 'flowCode',
+      width: 120,
     },
-    cancelText: '取消',
-    onCancel() {},
-  });
-}
+    {
+      title: '业务类型',
+      dataIndex: 'businessType',
+      width: 120,
+    },
+    {
+      title: '流程描述',
+      dataIndex: 'description',
+      width: 200,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      width: 80,
+    },
+    {
+      title: '创建人',
+      dataIndex: 'createUserName',
+      width: 100,
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createTime',
+      width: 150,
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      fixed: 'right',
+      width: 120,
+    },
+  ]);
 
-//请求批量删除
-async function requestBatchDelete() {
-  try {
-    SmartLoading.show();
-    await approvalFlowApi.batchDelete(selectedRowKeyList.value);
-    message.success('删除成功');
-    queryData();
-  } catch (e) {
-    smartSentry.captureError(e);
-  } finally {
-    SmartLoading.hide();
+  const queryFormState = {
+    flowName: undefined,
+    flowCode: undefined,
+    businessType: undefined,
+    status: undefined,
+    pageNum: 1,
+    pageSize: 10,
+  };
+  const queryForm = reactive(_.cloneDeep(queryFormState));
+  const tableLoading = ref(false);
+  const tableData = ref([]);
+  const total = ref(0);
+
+  function getBusinessTypeDesc(value) {
+    for (const key in BUSINESS_TYPE_ENUM) {
+      if (BUSINESS_TYPE_ENUM[key].value === value) {
+        return BUSINESS_TYPE_ENUM[key].desc;
+      }
+    }
+    return '';
   }
-}
+
+  function resetQuery() {
+    let pageSize = queryForm.pageSize;
+    Object.assign(queryForm, _.cloneDeep(queryFormState));
+    queryForm.pageSize = pageSize;
+    queryData();
+  }
+
+  function onSearch() {
+    queryForm.pageNum = 1;
+    queryData();
+  }
+
+  async function queryData() {
+    tableLoading.value = true;
+    try {
+      let queryResult = await approvalFlowApi.query(queryForm);
+      tableData.value = queryResult.data.list;
+      total.value = queryResult.data.total;
+    } catch (e) {
+      smartSentry.captureError(e);
+    } finally {
+      tableLoading.value = false;
+    }
+  }
+
+  onMounted(queryData);
+
+  const formModal = ref();
+
+  function addFlow(rowData) {
+    formModal.value.showDrawer(rowData);
+  }
+
+  function showDetail(record) {
+    formModal.value.showDrawer(record);
+  }
+
+  function deleteFlow(rowData) {
+    Modal.confirm({
+      title: '提示',
+      content: '确定要删除【' + rowData.flowName + '】吗?',
+      okText: '删除',
+      okType: 'danger',
+      onOk() {
+        doDelete(rowData.approvalFlowId);
+      },
+      cancelText: '取消',
+      onCancel() {},
+    });
+  }
+
+  async function doDelete(approvalFlowId) {
+    try {
+      SmartLoading.show();
+      await approvalFlowApi.delete(approvalFlowId);
+      message.success('删除成功');
+      queryData();
+    } catch (e) {
+      smartSentry.captureError(e);
+    } finally {
+      SmartLoading.hide();
+    }
+  }
 </script>

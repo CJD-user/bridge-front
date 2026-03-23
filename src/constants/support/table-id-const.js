@@ -35,6 +35,7 @@ export const TABLE_ID_CONST = {
       SUPPLIER: businessERPInitTableId + 3, //供应商管理
       SUPPLIER_EVALUATE: businessERPInitTableId + 4, //供应商评价
       INVENTORY: businessERPInitTableId + 5, //库存管理
+      APPROVAL_FLOW: businessERPInitTableId + 6, //审批流程
     },
   },
 

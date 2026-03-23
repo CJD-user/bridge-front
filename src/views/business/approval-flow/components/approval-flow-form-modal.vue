@@ -1,129 +1,290 @@
 <!--
-  * 审批流程配置表
+  * 审批流程表单
   *
-  * @Author:    hyc
-  * @Date:      2026-03-22 15:50:20
-  * @Copyright  /
+  * @Author:    1024创新实验室
+  * @Date:      2024-01-01
+  * @Copyright  1024创新实验室
 -->
 <template>
-  <a-drawer
-      :title="form.approvalFlowId ? '编辑' : '添加'"
-      width="500px"
-      :open="visibleFlag"
-      @close="onClose"
-      :maskClosable="false"
-      :destroyOnClose="true"
-  >
-    <a-form ref="formRef" :model="form" :rules="rules" :label-col="{ span: 5 }" >
-      <a-form-item label="审批流程ID"  name="approvalFlowId">
-        <a-input-number style="width: 100%" v-model:value="form.approvalFlowId" placeholder="审批流程ID" />
+  <a-drawer :title="form.approvalFlowId ? '编辑' : '添加'" :width="700" :open="visible" :body-style="{ paddingBottom: '80px' }" @close="onClose">
+    <a-form ref="formRef" :model="form" :rules="rules" :label-col="{ span: 4 }" :wrapper-col="{ span: 18 }">
+      <a-form-item label="流程名称" name="flowName">
+        <a-input v-model:value="form.flowName" placeholder="请输入流程名称" />
       </a-form-item>
-      <a-form-item label="流程名称"  name="flowName">
-        <a-input style="width: 100%" v-model:value="form.flowName" placeholder="流程名称" />
+      <a-form-item label="流程编码" name="flowCode">
+        <a-input v-model:value="form.flowCode" placeholder="请输入流程编码" :disabled="!!form.approvalFlowId" />
       </a-form-item>
-      <a-form-item label="流程编码"  name="flowCode">
-        <a-input style="width: 100%" v-model:value="form.flowCode" placeholder="流程编码" />
+      <a-form-item label="业务类型" name="businessType">
+        <a-select v-model:value="form.businessType" placeholder="请选择业务类型">
+          <a-select-option v-for="item in BUSINESS_TYPE_ENUM" :key="item.value" :value="item.value">
+            {{ item.desc }}
+          </a-select-option>
+        </a-select>
       </a-form-item>
-      <a-form-item label="业务类型: 1-采购申请 2-出库申请 3-供应商评价"  name="businessType">
-        <a-input-number style="width: 100%" v-model:value="form.businessType" placeholder="业务类型: 1-采购申请 2-出库申请 3-供应商评价" />
+      <a-form-item label="流程描述" name="description">
+        <a-textarea v-model:value="form.description" placeholder="请输入流程描述" :rows="2" />
+      </a-form-item>
+      <a-form-item label="状态" name="status">
+        <a-radio-group v-model:value="form.status">
+          <a-radio :value="1">启用</a-radio>
+          <a-radio :value="0">停用</a-radio>
+        </a-radio-group>
+      </a-form-item>
+
+      <a-divider>审批节点配置</a-divider>
+
+      <a-form-item label="" :wrapper-col="{ span: 24 }">
+        <div style="margin-bottom: 8px">
+          <a-button type="primary" size="small" @click="addNode" :disabled="form.nodeList.length >= 3">
+            <PlusOutlined /> 添加节点
+          </a-button>
+          <span style="margin-left: 8px; color: #999">节点数量: {{ form.nodeList.length }}/3 (至少1个)</span>
+        </div>
+
+        <a-table
+          :dataSource="form.nodeList"
+          :columns="nodeColumns"
+          rowKey="key"
+          bordered
+          :pagination="false"
+          size="small"
+        >
+          <template #bodyCell="{ text, record, column, index }">
+            <template v-if="column.dataIndex === 'nodeOrder'">
+              <a-tag color="blue">第{{ index + 1 }}节点</a-tag>
+            </template>
+            <template v-if="column.dataIndex === 'nodeName'">
+              <a-input v-model:value="record.nodeName" placeholder="节点名称" size="small" />
+            </template>
+            <template v-if="column.dataIndex === 'approverType'">
+              <a-select v-model:value="record.approverType" placeholder="审批人类型" size="small" style="width: 100%">
+                <a-select-option v-for="item in APPROVER_TYPE_ENUM" :key="item.value" :value="item.value">
+                  {{ item.desc }}
+                </a-select-option>
+              </a-select>
+            </template>
+            <template v-if="column.dataIndex === 'roleId'">
+              <RoleSelect v-model:value="record.roleId" size="small" @change="(val, info) => onRoleChange(record, val, info)" />
+            </template>
+            <template v-if="column.dataIndex === 'action'">
+              <a-button type="link" danger size="small" @click="removeNode(index)" :disabled="form.nodeList.length <= 1">
+                删除
+              </a-button>
+            </template>
+          </template>
+        </a-table>
       </a-form-item>
     </a-form>
-
-    <template #footer>
-      <a-space>
-        <a-button @click="onClose">取消</a-button>
-        <a-button type="primary" @click="onSubmit">保存</a-button>
-      </a-space>
-    </template>
+    <div
+      :style="{
+        position: 'absolute',
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        borderTop: '1px solid #e9e9e9',
+        padding: '10px 16px',
+        background: '#fff',
+        textAlign: 'right',
+        zIndex: 1,
+      }"
+    >
+      <a-button style="margin-right: 8px" @click="onClose">取消</a-button>
+      <a-button type="primary" @click="onSubmit">提交</a-button>
+    </div>
   </a-drawer>
 </template>
-<script setup lang="ts">
-import { reactive, ref, nextTick } from 'vue';
-import _ from 'lodash';
-import { message } from 'ant-design-vue';
-import { SmartLoading } from '/@/components/framework/smart-loading';
-import { approvalFlowApi } from '/@/api/business/approval-flow/approval-flow-api';
-import { smartSentry } from '/@/lib/smart-sentry';
+<script setup>
+  import { ref, nextTick, reactive } from 'vue';
+  import { message } from 'ant-design-vue';
+  import { SmartLoading } from '/@/components/framework/smart-loading';
+  import _ from 'lodash';
+  import { approvalFlowApi } from '/@/api/business/approval-flow/approval-flow-api';
+  import { smartSentry } from '/@/lib/smart-sentry';
+  import { BUSINESS_TYPE_ENUM, APPROVER_TYPE_ENUM } from '/@/constants/business/approval-flow/approval-flow-const';
+  import RoleSelect from '/@/components/business/role-select/index.vue';
 
-// ------------------------ 事件 ------------------------
+  const emit = defineEmits(['reloadList']);
 
-const emits = defineEmits(['reloadList']);
+  const formRef = ref();
 
-// ------------------------ 显示与隐藏 ------------------------
-// 是否显示
-const visibleFlag = ref(false);
+  const nodeColumns = ref([
+    {
+      title: '顺序',
+      dataIndex: 'nodeOrder',
+      width: 80,
+    },
+    {
+      title: '节点名称',
+      dataIndex: 'nodeName',
+      width: 150,
+    },
+    {
+      title: '审批人类型',
+      dataIndex: 'approverType',
+      width: 150,
+    },
+    {
+      title: '选择角色',
+      dataIndex: 'roleId',
+      width: 150,
+    },
+    {
+      title: '操作',
+      dataIndex: 'action',
+      width: 80,
+    },
+  ]);
 
-function show(rowData) {
-  Object.assign(form, formDefault);
-  if (rowData && !_.isEmpty(rowData)) {
-    Object.assign(form, rowData);
-  }
-  // 使用字典时把下面这注释修改成自己的字典字段 有多个字典字段就复制多份同理修改 不然打开表单时不显示字典初始值
-  // if (form.status && form.status.length > 0) {
-  //   form.status = form.status.map((e) => e.valueCode);
-  // }
-  visibleFlag.value = true;
-  nextTick(() => {
-    formRef.value.clearValidate();
+  const createEmptyNode = () => ({
+    key: Date.now() + Math.random(),
+    nodeName: '',
+    nodeCode: '',
+    nodeOrder: 1,
+    approverType: 3,
+    approverIds: '',
+    approverNames: '',
+    roleId: undefined,
+    remark: '',
   });
-}
 
-function onClose() {
-  Object.assign(form, formDefault);
-  visibleFlag.value = false;
-}
+  const formDefault = {
+    approvalFlowId: undefined,
+    flowName: undefined,
+    flowCode: undefined,
+    businessType: undefined,
+    description: undefined,
+    status: 1,
+    nodeList: [createEmptyNode()],
+  };
 
-// ------------------------ 表单 ------------------------
+  let form = reactive({ ...formDefault });
 
-// 组件ref
-const formRef = ref();
+  const rules = {
+    flowName: [{ required: true, message: '流程名称不能为空' }],
+    flowCode: [{ required: true, message: '流程编码不能为空' }],
+    businessType: [{ required: true, message: '请选择业务类型' }],
+  };
 
-const formDefault = {
-  approvalFlowId: undefined, //审批流程ID
-  flowName: undefined, //流程名称
-  flowCode: undefined, //流程编码
-  businessType: undefined, //业务类型: 1-采购申请 2-出库申请 3-供应商评价
-};
+  const visible = ref(false);
 
-let form = reactive({ ...formDefault });
-
-const rules = {
-  approvalFlowId: [{ required: true, message: '审批流程ID 必填' }],
-  flowName: [{ required: true, message: '流程名称 必填' }],
-  flowCode: [{ required: true, message: '流程编码 必填' }],
-  businessType: [{ required: true, message: '业务类型: 1-采购申请 2-出库申请 3-供应商评价 必填' }],
-};
-
-// 点击确定，验证表单
-async function onSubmit() {
-  try {
-    await formRef.value.validateFields();
-    save();
-  } catch (err) {
-    message.error('参数验证错误，请仔细填写表单数据!');
-  }
-}
-
-// 新建、编辑API
-async function save() {
-  SmartLoading.show();
-  try {
-    if (form.approvalFlowId) {
-      await approvalFlowApi.update(form);
-    } else {
-      await approvalFlowApi.add(form);
+  function showDrawer(rowData) {
+    Object.assign(form, _.cloneDeep(formDefault));
+    if (rowData && !_.isEmpty(rowData)) {
+      Object.assign(form, rowData);
+      if (rowData.nodeList && rowData.nodeList.length > 0) {
+        form.nodeList = rowData.nodeList.map((n, idx) => ({
+          ...n,
+          key: Date.now() + idx,
+        }));
+      }
     }
-    message.success('操作成功');
-    emits('reloadList');
-    onClose();
-  } catch (err) {
-    smartSentry.captureError(err);
-  } finally {
-    SmartLoading.hide();
+    visible.value = true;
+    nextTick(() => {
+      formRef.value.clearValidate();
+    });
   }
-}
 
-defineExpose({
-  show,
-});
+  function onClose() {
+    Object.assign(form, _.cloneDeep(formDefault));
+    visible.value = false;
+  }
+
+  function addNode() {
+    if (form.nodeList.length >= 3) {
+      message.warning('审批节点最多只能有3个');
+      return;
+    }
+    const newNode = createEmptyNode();
+    newNode.nodeOrder = form.nodeList.length + 1;
+    form.nodeList.push(newNode);
+  }
+
+  function removeNode(index) {
+    if (form.nodeList.length <= 1) {
+      message.warning('审批节点至少需要1个');
+      return;
+    }
+    form.nodeList.splice(index, 1);
+    form.nodeList.forEach((node, idx) => {
+      node.nodeOrder = idx + 1;
+    });
+  }
+
+  function onRoleChange(record, roleId, roleInfo) {
+    if (roleInfo) {
+      record.approverIds = String(roleId);
+      record.approverNames = roleInfo.roleName;
+    }
+  }
+
+  function validateNodeList() {
+    if (form.nodeList.length < 1 || form.nodeList.length > 3) {
+      message.error('审批节点数量必须在1-3个之间');
+      return false;
+    }
+    for (let i = 0; i < form.nodeList.length; i++) {
+      const node = form.nodeList[i];
+      if (!node.nodeName) {
+        message.error(`第${i + 1}个节点的名称不能为空`);
+        return false;
+      }
+      if (!node.approverType) {
+        message.error(`第${i + 1}个节点的审批人类型不能为空`);
+        return false;
+      }
+      if (node.approverType === 3 && !node.roleId) {
+        message.error(`第${i + 1}个节点选择了角色审批，请选择角色`);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function onSubmit() {
+    formRef.value
+      .validate()
+      .then(async () => {
+        if (!validateNodeList()) {
+          return;
+        }
+
+        SmartLoading.show();
+        try {
+          const submitData = {
+            ...form,
+            nodeList: form.nodeList.map((node, idx) => ({
+              nodeName: node.nodeName,
+              nodeCode: node.nodeCode || `NODE_${idx + 1}`,
+              nodeOrder: idx + 1,
+              approverType: node.approverType,
+              approverIds: node.approverIds,
+              approverNames: node.approverNames,
+              roleId: node.roleId,
+              remark: node.remark,
+            })),
+          };
+
+          if (form.approvalFlowId) {
+            await approvalFlowApi.update(submitData);
+          } else {
+            await approvalFlowApi.add(submitData);
+          }
+          message.success(`${form.approvalFlowId ? '修改' : '添加'}成功`);
+          onClose();
+          emit('reloadList');
+        } catch (error) {
+          smartSentry.captureError(error);
+        } finally {
+          SmartLoading.hide();
+        }
+      })
+      .catch((error) => {
+        console.log('error', error);
+        message.error('参数验证错误，请仔细填写表单数据!');
+      });
+  }
+
+  defineExpose({
+    showDrawer,
+  });
 </script>

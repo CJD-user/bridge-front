@@ -1,48 +1,60 @@
-/**
- * 审批流程配置表 api 封装
+/*
+ * 审批流程 API
  *
- * @Author:    hyc
- * @Date:      2026-03-22 15:50:20
- * @Copyright  /
+ * @Author:    1024创新实验室
+ * @Date:      2024-01-01
+ * @Copyright  1024创新实验室
  */
 import { postRequest, getRequest } from '/@/lib/axios';
 
 export const approvalFlowApi = {
+  query: (param) => {
+    return postRequest('/approvalFlow/query', param);
+  },
 
-    /**
-     * 分页查询  @author  hyc
-     */
-    queryPage : (param) => {
-        return postRequest('/approvalFlow/queryPage', param);
-    },
+  getDetail: (approvalFlowId) => {
+    return getRequest(`/approvalFlow/detail/${approvalFlowId}`);
+  },
 
-    /**
-     * 增加  @author  hyc
-     */
-    add: (param) => {
-        return postRequest('/approvalFlow/add', param);
-    },
+  add: (param) => {
+    return postRequest('/approvalFlow/add', param);
+  },
 
-    /**
-     * 修改  @author  hyc
-     */
-    update: (param) => {
-        return postRequest('/approvalFlow/update', param);
-    },
+  update: (param) => {
+    return postRequest('/approvalFlow/update', param);
+  },
 
+  delete: (approvalFlowId) => {
+    return getRequest(`/approvalFlow/delete/${approvalFlowId}`);
+  },
 
-    /**
-     * 删除  @author  hyc
-     */
-    delete: (id) => {
-        return getRequest(`/approvalFlow/delete/${id}`);
-    },
+  updateStatus: (approvalFlowId, status) => {
+    return getRequest(`/approvalFlow/updateStatus/${approvalFlowId}`, { status });
+  },
 
-    /**
-     * 批量删除  @author  hyc
-     */
-    batchDelete: (idList) => {
-        return postRequest('/approvalFlow/batchDelete', idList);
-    },
+  listByBusinessType: (businessType) => {
+    return getRequest('/approvalFlow/listByBusinessType', { businessType });
+  },
+};
 
+export const approvalNodeApi = {
+  listByFlowId: (approvalFlowId) => {
+    return getRequest(`/approvalNode/list/${approvalFlowId}`);
+  },
+
+  add: (param) => {
+    return postRequest('/approvalNode/add', param);
+  },
+
+  update: (param) => {
+    return postRequest('/approvalNode/update', param);
+  },
+
+  delete: (approvalNodeId) => {
+    return getRequest(`/approvalNode/delete/${approvalNodeId}`);
+  },
+
+  batchSave: (param) => {
+    return postRequest('/approvalNode/batchSave', param);
+  },
 };
