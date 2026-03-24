@@ -61,6 +61,13 @@
           新建
         </a-button>
 
+        <a-button @click="applyOutbound" v-privilege="'outboundOrder:add'">
+          <template #icon>
+            <ExportOutlined />
+          </template>
+          出库
+        </a-button>
+
         <a-button @click="confirmBatchDelete" danger :disabled="selectedRowKeyList.length === 0" v-privilege="'material:batchDelete'">
           <template #icon>
             <DeleteOutlined />
@@ -151,6 +158,7 @@
     </div>
 
     <MaterialFormModal ref="formModal" @reloadList="queryData" />
+    <OutboundOrderFormModal ref="outboundModal" @reloadList="queryData" />
 
     <a-modal v-model:open="importModalShowFlag" title="导入材料" @onCancel="hideImportModal" @ok="hideImportModal">
       <div style="text-align: center; width: 400px; margin: 0 auto">
@@ -182,6 +190,7 @@
 </template>
 <script setup>
   import MaterialFormModal from './components/material-form-modal.vue';
+  import OutboundOrderFormModal from '/@/views/business/outbound/components/outbound-order-form-modal.vue';
   import { onMounted, reactive, ref } from 'vue';
   import { message, Modal } from 'ant-design-vue';
   import { SmartLoading } from '/@/components/framework/smart-loading';
@@ -336,9 +345,27 @@
   onMounted(queryData);
 
   const formModal = ref();
+  const outboundModal = ref();
 
   function addMaterial(materialData) {
     formModal.value.showDrawer(materialData);
+  }
+
+  function applyOutbound() {
+    const selectedMaterials = tableData.value.filter((item) => selectedRowKeyList.value.includes(item.materialId));
+    const itemList = selectedMaterials.map((material, idx) => ({
+      key: Date.now() + idx,
+      materialId: material.materialId,
+      materialCode: material.materialCode,
+      materialName: material.materialName,
+      specificationModel: material.specificationModel,
+      unit: material.unit,
+      requestQuantity: 1,
+      batchNo: '',
+      storageLocation: '',
+      remark: '',
+    }));
+    outboundModal.value.showDrawer({ itemList });
   }
 
   function showDetail(record) {
