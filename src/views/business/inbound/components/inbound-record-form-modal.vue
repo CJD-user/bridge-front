@@ -1,30 +1,34 @@
 <!--
-  * 库存表单
+  * 入库记录表单
   *
   * @Author:    1024创新实验室
   * @Date:      2024-01-01
   * @Copyright  1024创新实验室
 -->
 <template>
-  <a-drawer :title="form.inventoryId ? '编辑库存' : '添加库存'" :width="600" :open="visible" :body-style="{ paddingBottom: '80px' }" @close="onClose">
+  <a-drawer title="新增入库记录" :width="600" :open="visible" :body-style="{ paddingBottom: '80px' }" @close="onClose">
     <a-form ref="formRef" :model="form" :rules="rules" :label-col="{ span: 5 }" :wrapper-col="{ span: 16 }">
       <a-form-item label="材料" name="materialId">
-        <MaterialSelect v-model:value="form.materialId" @change="onMaterialChange" :disabled="!!form.inventoryId" />
+        <MaterialSelect v-model:value="form.materialId" @change="onMaterialChange" placeholder="请选择材料" />
       </a-form-item>
       <a-form-item label="批次号" name="batchNo">
-        <a-input v-model:value="form.batchNo" placeholder="请输入批次号" :disabled="!!form.inventoryId" />
+        <a-input v-model:value="form.batchNo" placeholder="请输入批次号" />
       </a-form-item>
-      <a-form-item label="库存数量" name="quantity">
-        <a-input-number style="width: 100%" v-model:value="form.quantity" placeholder="请输入库存数量" :min="0" :precision="2" />
+      <a-form-item label="入库数量" name="quantity">
+        <a-input-number v-model:value="form.quantity" :min="1" :precision="2" style="width: 100%" placeholder="请输入入库数量" @change="calcAmount" />
       </a-form-item>
       <a-form-item label="单价" name="unitPrice">
-        <a-input-number style="width: 100%" v-model:value="form.unitPrice" placeholder="请输入单价" :min="0" :precision="2" />
+        <a-input-number v-model:value="form.unitPrice" :min="0" :precision="2" style="width: 100%" placeholder="请输入单价" @change="calcAmount" />
       </a-form-item>
-      <a-form-item label="生产日期" name="productionDate">
-        <a-date-picker v-model:value="form.productionDate" style="width: 100%" />
+      <a-form-item label="总价" name="totalPrice">
+        <a-input-number v-model:value="form.totalPrice" :min="0" :precision="2" style="width: 100%" placeholder="自动计算" :disabled="true" />
       </a-form-item>
-      <a-form-item label="有效期至" name="expirationDate">
-        <a-date-picker v-model:value="form.expirationDate" style="width: 100%" />
+      <a-form-item label="入库类型" name="inboundType">
+        <a-select v-model:value="form.inboundType" placeholder="请选择入库类型">
+          <a-select-option v-for="item in INBOUND_TYPE_ENUM" :key="item.value" :value="item.value">
+            {{ item.desc }}
+          </a-select-option>
+        </a-select>
       </a-form-item>
       <a-form-item label="存放位置" name="storageLocation">
         <a-input v-model:value="form.storageLocation" placeholder="请输入存放位置" />
@@ -47,7 +51,7 @@
       }"
     >
       <a-button style="margin-right: 8px" @click="onClose">取消</a-button>
-      <a-button type="primary" @click="onSubmit">提交</a-button>
+      <a-button type="primary" @click="onSubmit">确定</a-button>
     </div>
   </a-drawer>
 </template>
@@ -56,9 +60,9 @@
   import { message } from 'ant-design-vue';
   import { SmartLoading } from '/@/components/framework/smart-loading';
   import _ from 'lodash';
-  import dayjs from 'dayjs';
-  import { inventoryApi } from '/@/api/business/inventory/inventory-api';
+  import { inboundRecordApi } from '/@/api/business/inbound/inbound-record-api';
   import { smartSentry } from '/@/lib/smart-sentry';
+  import { INBOUND_TYPE_ENUM } from '/@/constants/business/inbound/inbound-const';
   import MaterialSelect from '/@/components/business/material-select/index.vue';
 
   const emit = defineEmits(['reloadList']);
@@ -66,44 +70,32 @@
   const formRef = ref();
 
   const formDefault = {
-    inventoryId: undefined,
     materialId: undefined,
-    materialCode: undefined,
-    materialName: undefined,
-    specificationModel: undefined,
-    unit: undefined,
-    batchNo: undefined,
-    quantity: 0,
-    unitPrice: undefined,
-    productionDate: undefined,
-    expirationDate: undefined,
-    storageLocation: undefined,
-    remark: undefined,
+    materialCode: '',
+    materialName: '',
+    specificationModel: '',
+    unit: '',
+    batchNo: '',
+    quantity: 1,
+    unitPrice: null,
+    totalPrice: null,
+    inboundType: 1,
+    storageLocation: '',
+    remark: '',
   };
 
   let form = reactive({ ...formDefault });
 
   const rules = {
     materialId: [{ required: true, message: '请选择材料' }],
-    batchNo: [{ required: true, message: '请输入批次号' }],
-    quantity: [{ required: true, message: '请输入库存数量' }],
+    quantity: [{ required: true, message: '请输入入库数量' }],
+    inboundType: [{ required: true, message: '请选择入库类型' }],
   };
 
   const visible = ref(false);
 
-  function showDrawer(rowData) {
-    Object.assign(form, formDefault);
-    if (rowData && !_.isEmpty(rowData)) {
-      Object.assign(form, rowData);
-      if (form.productionDate) {
-        form.productionDate = dayjs(form.productionDate);
-      }
-      if (form.expirationDate) {
-        form.expirationDate = dayjs(form.expirationDate);
-      }
-      form.quantity = Number(form.quantity) || 0;
-      form.unitPrice = Number(form.unitPrice) || undefined;
-    }
+  function showDrawer() {
+    Object.assign(form, _.cloneDeep(formDefault));
     visible.value = true;
     nextTick(() => {
       formRef.value.clearValidate();
@@ -111,7 +103,7 @@
   }
 
   function onClose() {
-    Object.assign(form, formDefault);
+    Object.assign(form, _.cloneDeep(formDefault));
     visible.value = false;
   }
 
@@ -121,7 +113,15 @@
       form.materialName = materialInfo.materialName;
       form.specificationModel = materialInfo.specificationModel;
       form.unit = materialInfo.unit;
+      form.unitPrice = materialInfo.unitPrice;
+      calcAmount();
     }
+  }
+
+  function calcAmount() {
+    const qty = Number(form.quantity) || 0;
+    const price = Number(form.unitPrice) || 0;
+    form.totalPrice = (qty * price).toFixed(2);
   }
 
   function onSubmit() {
@@ -130,19 +130,8 @@
       .then(async () => {
         SmartLoading.show();
         try {
-          let params = { ...form };
-          if (form.productionDate) {
-            params.productionDate = dayjs(form.productionDate).format('YYYY-MM-DD');
-          }
-          if (form.expirationDate) {
-            params.expirationDate = dayjs(form.expirationDate).format('YYYY-MM-DD');
-          }
-          if (form.inventoryId) {
-            await inventoryApi.update(params);
-          } else {
-            await inventoryApi.add(params);
-          }
-          message.success(`${form.inventoryId ? '修改' : '添加'}成功`);
+          await inboundRecordApi.add(form);
+          message.success('入库成功');
           onClose();
           emit('reloadList');
         } catch (error) {

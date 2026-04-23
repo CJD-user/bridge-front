@@ -26,8 +26,11 @@
       <a-form-item label="参考单价" name="unitPrice">
         <a-input-number style="width: 100%" placeholder="请输入参考单价" v-model:value="form.unitPrice" :min="0" :precision="2" />
       </a-form-item>
-      <a-form-item label="安全库存阈值" name="safetyStockThreshold">
-        <a-input-number style="width: 100%" placeholder="请输入安全库存阈值" v-model:value="form.safetyStockThreshold" :min="0" :precision="2" />
+      <a-form-item label="当前库存" name="currentStock">
+        <a-input-number style="width: 100%" placeholder="请输入当前库存数量" v-model:value="form.currentStock" :min="0" :precision="2" :disabled="!!form.materialId" />
+      </a-form-item>
+      <a-form-item label="最低预警数量" name="minWarningQuantity">
+        <a-input-number style="width: 100%" placeholder="请输入最低预警数量" v-model:value="form.minWarningQuantity" :min="0" :precision="2" />
       </a-form-item>
       <a-form-item label="保质期(天)" name="shelfLifeDays">
         <a-input-number style="width: 100%" placeholder="请输入保质期天数" v-model:value="form.shelfLifeDays" :min="0" />
@@ -93,7 +96,8 @@
     specificationModel: undefined,
     unit: undefined,
     unitPrice: undefined,
-    safetyStockThreshold: undefined,
+    currentStock: 0,
+    minWarningQuantity: 0,
     shelfLifeDays: undefined,
     brand: undefined,
     manufacturer: undefined,

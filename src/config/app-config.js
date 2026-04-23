@@ -43,7 +43,7 @@ export const appDefaultConfig = {
   // 水印
   watermarkFlag: false,
   // 网站名称
-  websiteName: '桥梁器械建材管理系统',
+  websiteName: '桥梁器械材料管理系统',
   // 主题颜色
   primaryColor: '#1677ff',
   // 紧凑

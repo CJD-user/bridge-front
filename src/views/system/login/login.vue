@@ -10,46 +10,9 @@
 -->
 <template>
   <div class="login-container">
-    <div class="box-item desc">
-      <div class="welcome">
-        <p>欢迎登录 桥梁器械建材管理系统</p>
-        <p class="desc">
-          「简洁、高效、安全」。
-          <br />
-          <br />
-          <span class="setence">
-            致：
-            <br />
-            &nbsp;&nbsp;&nbsp;&nbsp;我们希望
-            <br />
-            保持谦逊，保持学习，热爱代码，更热爱生活 !<br />
-            永远年轻，永远前行 !<br />
-            <span class="author">
-              <a target="_blank" href="https://zhuoda.vip" style="color: white; font-size: 13px; text-decoration: underline">
-                hyc
-              </a>
-            </span>
-          </span>
-        </p>
-      </div>
-<!--      <div class="app-qr-box">-->
-<!--        <div class="app-qr">-->
-<!--          <img :src="zhuoda" />-->
-<!--          <span class="qr-desc"> 加微信，骚扰卓大 :) </span>-->
-<!--        </div>-->
-<!--        <div class="app-qr">-->
-<!--          <img :src="gzh" />-->
-<!--          <div class="qr-desc-marquee">-->
-<!--            <div class="marquee">-->
-<!--              <span>关注：六边形工程师</span>-->
-<!--              <span>分享：AI、赚钱、代码、健康</span>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-    </div>
     <div class="box-item login">
 <!--      <img class="login-qr" :src="loginQR" />-->
+      <p class="login-title">桥梁器械材料管理系统</p>
       <div class="login-title">账号登录</div>
       <a-form ref="formRef" class="login-form" :model="loginForm" :rules="rules">
         <a-form-item name="loginName">
@@ -67,7 +30,6 @@
           <a-popover placement="top">
             <template #content>
               <a-flex :vertical="true" justify="center" align="center">
-               <img :src="gzh" />
                <a-typography-text type="danger">忘记密码请联系管理员！</a-typography-text>
               </a-flex>
             </template>
@@ -117,7 +79,6 @@
   import { useUserStore } from '/@/store/modules/system/user';
   import zhuoda from '/@/assets/images/1024lab/zhuoda-wechat.jpg';
   import loginQR from '/@/assets/images/login/login-qr.png';
-  import gzh from '/@/assets/images/1024lab/gzh.jpg';
   import wechatIcon from '/@/assets/images/login/wechat-icon.png';
   import aliIcon from '/@/assets/images/login/ali-icon.png';
   import douyinIcon from '/@/assets/images/login/douyin-icon.png';
@@ -162,24 +123,24 @@
       }
     };
 
-    notification['success']({
-      message: '温馨提示',
-      description: 'SmartAdmin 提供 9种 登录背景风格哦！',
-      duration: 8,
-      onClick: () => {},
-      btn: () =>
-        h(
-          Button,
-          {
-            type: 'primary',
-            target: '_blank',
-            size: 'small',
-            href: 'https://smartadmin.vip/views/doc/front/Login.html',
-            onClick: () => {},
-          },
-          { default: () => '去看看' }
-        ),
-    });
+    // notification['success']({
+    //   message: '温馨提示',
+    //   description: 'SmartAdmin 提供 9种 登录背景风格哦！',
+    //   duration: 8,
+    //   onClick: () => {},
+    //   btn: () =>
+    //     h(
+    //       Button,
+    //       {
+    //         type: 'primary',
+    //         target: '_blank',
+    //         size: 'small',
+    //         href: 'https://smartadmin.vip/views/doc/front/Login.html',
+    //         onClick: () => {},
+    //       },
+    //       { default: () => '去看看' }
+    //     ),
+    // });
   });
 
   onUnmounted(() => {

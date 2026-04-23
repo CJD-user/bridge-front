@@ -32,7 +32,7 @@ export const homeRouters = [
           icon: 'HomeOutlined',
           parentMenuList: [{ name: '_home', title: '首页' }],
         },
-        component: () => import('/@/views/system/home/index.vue'),
+        component: () => import('/@/views/business/statistics/statistics-list.vue'),
       },
       {
         path: '/account',

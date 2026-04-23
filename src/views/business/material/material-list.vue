@@ -250,8 +250,14 @@
       width: 100,
     },
     {
-      title: '安全库存阈值',
-      dataIndex: 'safetyStockThreshold',
+      title: '当前库存',
+      dataIndex: 'currentStock',
+      resizable: true,
+      width: 100,
+    },
+    {
+      title: '最低预警数量',
+      dataIndex: 'minWarningQuantity',
       resizable: true,
       width: 120,
     },
