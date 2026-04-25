@@ -113,6 +113,7 @@
         <template v-if="column.dataIndex === 'action'">
           <div class="smart-table-operate">
             <a-button @click="showEvaluate(record)" type="link" v-privilege="'supplierEvaluate:query'">评价</a-button>
+            <a-button @click="showPurchaseRecords(record)" type="link">采购记录</a-button>
             <a-button @click="addSupplier(record)" type="link" v-privilege="'supplier:update'">编辑</a-button>
             <a-button @click="deleteSupplier(record)" danger type="link" v-privilege="'supplier:delete'">删除</a-button>
           </div>
@@ -137,11 +138,13 @@
 
     <SupplierFormModal ref="formModal" @reloadList="queryData" />
     <SupplierEvaluateListModal ref="evaluateModal" />
+    <SupplierPurchaseRecordsModal ref="purchaseRecordsModal" />
   </a-card>
 </template>
 <script setup>
   import SupplierFormModal from './components/supplier-form-modal.vue';
   import SupplierEvaluateListModal from './components/supplier-evaluate-list-modal.vue';
+  import SupplierPurchaseRecordsModal from './components/supplier-purchase-records-modal.vue';
   import { onMounted, reactive, ref } from 'vue';
   import { message, Modal } from 'ant-design-vue';
   import { SmartLoading } from '/@/components/framework/smart-loading';
@@ -233,7 +236,7 @@
       dataIndex: 'action',
       resizable: true,
       fixed: 'right',
-      width: 150,
+      width: 220,
     },
   ]);
 
@@ -289,6 +292,7 @@
 
   const formModal = ref();
   const evaluateModal = ref();
+  const purchaseRecordsModal = ref();
 
   function addSupplier(supplierData) {
     formModal.value.showDrawer(supplierData);
@@ -300,6 +304,10 @@
 
   function showEvaluate(record) {
     evaluateModal.value.show(record.supplierId);
+  }
+
+  function showPurchaseRecords(record) {
+    purchaseRecordsModal.value.show(record);
   }
 
   function deleteSupplier(supplierData) {

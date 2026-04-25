@@ -39,4 +39,8 @@ export const supplierApi = {
   listAll: () => {
     return getRequest('/supplier/listAll');
   },
+
+  purchaseRecords: (supplierId) => {
+    return getRequest(`/supplier/purchaseRecords/${supplierId}`);
+  },
 };

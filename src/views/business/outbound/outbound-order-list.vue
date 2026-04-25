@@ -52,16 +52,16 @@
   </a-form>
 
   <a-card size="small" :bordered="false" :hoverable="true">
-    <a-row class="smart-table-btn-block">
-      <div class="smart-table-operate-block">
-        <a-button @click="addOutbound" type="primary" v-privilege="'outboundOrder:add'">
-          <template #icon>
-            <PlusOutlined />
-          </template>
-          发起出库申请
-        </a-button>
-      </div>
-    </a-row>
+<!--    <a-row class="smart-table-btn-block">-->
+<!--      <div class="smart-table-operate-block">-->
+<!--        <a-button @click="addOutbound" type="primary" v-privilege="'outboundOrder:add'">-->
+<!--          <template #icon>-->
+<!--            <PlusOutlined />-->
+<!--          </template>-->
+<!--          发起出库申请-->
+<!--        </a-button>-->
+<!--      </div>-->
+<!--    </a-row>-->
 
     <a-table
       size="small"
